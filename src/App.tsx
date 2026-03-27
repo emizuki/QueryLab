@@ -13,7 +13,9 @@ function App() {
   }
 
   return (
-    <main class="container">
+    <>
+      <div data-tauri-drag-region class="titlebar" />
+      <main class="container">
       <h1>Welcome to Tauri + Solid</h1>
 
       <div class="row">
@@ -43,8 +45,9 @@ function App() {
         />
         <button type="submit">Greet</button>
       </form>
-      <p>{greetMsg()}</p>
-    </main>
+        <p>{greetMsg()}</p>
+      </main>
+    </>
   );
 }
 
