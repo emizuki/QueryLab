@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "querylab",
-        "width": 800,
+        "title": "QueryLab",
+        "width": 900,
         "height": 600,
+        "minWidth": 750,
+        "minHeight": 500,
         "transparent": true,
         "decorations": true,
         "titleBarStyle": "Overlay",
