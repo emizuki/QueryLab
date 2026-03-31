@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onMount, onCleanup, Switch, Match } from "solid-js";
+import { createSignal, createEffect, Switch, Match } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { useConnections, type Credentials } from "../../stores/connection-store";
 import { useUI, type FormTab } from "../../stores/ui-store";
@@ -125,20 +125,11 @@ export function ConnectionForm() {
     alert("Connection test not yet implemented");
   };
 
-  // Close on Escape
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") ui.closeForm();
-  };
-
-  onMount(() => document.addEventListener("keydown", handleKeyDown));
-  onCleanup(() => document.removeEventListener("keydown", handleKeyDown));
 
   return (
     <div
       class="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) ui.closeForm();
-      }}
+      onClick={(e) => e.stopPropagation()}
     >
       <div class="w-120 max-h-130 flex flex-col rounded-xl bg-surface-dialog backdrop-blur-2xl border border-border shadow-2xl overflow-hidden">
         {/* Title */}

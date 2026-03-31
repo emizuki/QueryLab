@@ -8,6 +8,7 @@ export interface ConnectionTag {
 export const PRESET_TAGS: ConnectionTag[] = [
   { id: "preset-local", name: "local", isPreset: true, color: "green" },
   { id: "preset-development", name: "development", isPreset: true, color: "blue" },
+  { id: "preset-staging", name: "staging", isPreset: true, color: "yellow" },
   { id: "preset-production", name: "production", isPreset: true, color: "red" },
   { id: "preset-testing", name: "testing", isPreset: true, color: "orange" },
 ];
