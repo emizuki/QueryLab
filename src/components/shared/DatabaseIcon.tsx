@@ -14,8 +14,6 @@ export function DatabaseIcon(props: DatabaseIconProps) {
     mysql: "#4479A1",
     mariadb: "#003545",
     sqlite: "#003B57",
-    redis: "#DC382D",
-    mongodb: "#47A248",
   };
 
   const color = () => colors[props.type] ?? "#8E8E93";

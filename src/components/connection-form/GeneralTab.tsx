@@ -1,3 +1,4 @@
+import { Show } from "solid-js";
 import { Link } from "lucide-solid";
 import { TextField } from "../shared/TextField";
 import { SecureField } from "../shared/SecureField";
@@ -56,75 +57,92 @@ export function GeneralTab(props: GeneralTabProps) {
         placeholder="Connection name"
       />
 
-      {/* Import from URL */}
-      <button
-        type="button"
-        class="self-start text-[12px] text-accent hover:underline cursor-default flex items-center gap-1"
-        onClick={() => {
-          const url = prompt("Paste connection URL:");
-          if (url) {
-            // TODO: parse connection URL
-          }
-        }}
-      >
-        <Link size={12} />
-        Import from URL
-      </button>
-
-      {/* Connection Section */}
-      <div class="flex flex-col gap-3">
-        <h3 class="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-          Connection
-        </h3>
-        <TextField
-          label="Host"
-          value={props.connection.host}
-          onInput={(v) => props.onChange("host", v)}
-          placeholder="localhost"
-        />
-        <div class="flex gap-3">
+      <Show when={props.connection.type === "sqlite"}>
+        {/* SQLite: File Path */}
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+            Database File
+          </h3>
           <TextField
-            label="Port"
-            value={String(props.connection.port)}
-            onInput={(v) => props.onChange("port", parseInt(v) || 0)}
-            type="number"
-            class="w-24"
-          />
-          <TextField
-            label="Database"
+            label="File Path"
             value={props.connection.database}
             onInput={(v) => props.onChange("database", v)}
-            placeholder="database name"
-            class="flex-1"
+            placeholder="/path/to/database.db"
           />
         </div>
-      </div>
+      </Show>
 
-      {/* Authentication Section */}
-      <div class="flex flex-col gap-3">
-        <h3 class="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-          Authentication
-        </h3>
-        <TextField
-          label="Username"
-          value={props.connection.username}
-          onInput={(v) => props.onChange("username", v)}
-          placeholder="username"
-        />
-        {props.connection.type === "postgresql" && (
-          <Toggle
-            label="Use ~/.pgpass"
-            checked={props.connection.usePgpass}
-            onChange={(v) => props.onChange("usePgpass", v)}
+      <Show when={props.connection.type !== "sqlite"}>
+        {/* Import from URL */}
+        <button
+          type="button"
+          class="self-start text-[12px] text-accent hover:underline cursor-default flex items-center gap-1"
+          onClick={() => {
+            const url = prompt("Paste connection URL:");
+            if (url) {
+              // TODO: parse connection URL
+            }
+          }}
+        >
+          <Link size={12} />
+          Import from URL
+        </button>
+
+        {/* Connection Section */}
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+            Connection
+          </h3>
+          <TextField
+            label="Host"
+            value={props.connection.host}
+            onInput={(v) => props.onChange("host", v)}
+            placeholder="localhost"
           />
-        )}
-        <SecureField
-          label="Password"
-          value={props.password}
-          onInput={props.onPasswordChange}
-          placeholder="password"
-        />
-      </div>
+          <div class="flex gap-3">
+            <TextField
+              label="Port"
+              value={String(props.connection.port)}
+              onInput={(v) => props.onChange("port", parseInt(v) || 0)}
+              type="number"
+              class="w-24"
+            />
+            <TextField
+              label="Database"
+              value={props.connection.database}
+              onInput={(v) => props.onChange("database", v)}
+              placeholder="database name"
+              class="flex-1"
+            />
+          </div>
+        </div>
+
+        {/* Authentication Section */}
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+            Authentication
+          </h3>
+          <TextField
+            label="Username"
+            value={props.connection.username}
+            onInput={(v) => props.onChange("username", v)}
+            placeholder="username"
+          />
+          {props.connection.type === "postgresql" && (
+            <Toggle
+              label="Use ~/.pgpass"
+              checked={props.connection.usePgpass}
+              onChange={(v) => props.onChange("usePgpass", v)}
+            />
+          )}
+          <SecureField
+            label="Password"
+            value={props.password}
+            onInput={props.onPasswordChange}
+            placeholder="password"
+          />
+        </div>
+      </Show>
 
       {/* Appearance Section */}
       <div class="flex flex-col gap-3">

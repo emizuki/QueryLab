@@ -1,4 +1,4 @@
-export type DatabaseType = "postgresql" | "mysql" | "mariadb" | "sqlite" | "redis" | "mongodb";
+export type DatabaseType = "postgresql" | "mysql" | "mariadb" | "sqlite";
 
 export interface DatabaseTypeInfo {
   label: string;
@@ -11,6 +11,4 @@ export const DATABASE_DEFAULTS: Record<DatabaseType, DatabaseTypeInfo> = {
   mysql: { label: "MySQL", defaultPort: 3306, requiresAuth: true },
   mariadb: { label: "MariaDB", defaultPort: 3306, requiresAuth: true },
   sqlite: { label: "SQLite", defaultPort: 0, requiresAuth: false },
-  redis: { label: "Redis", defaultPort: 6379, requiresAuth: false },
-  mongodb: { label: "MongoDB", defaultPort: 27017, requiresAuth: true },
 };

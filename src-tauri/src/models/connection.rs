@@ -7,8 +7,6 @@ pub enum DatabaseType {
     Mysql,
     Mariadb,
     Sqlite,
-    Redis,
-    Mongodb,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
