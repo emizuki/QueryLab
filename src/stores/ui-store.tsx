@@ -2,6 +2,7 @@ import { createContext, useContext, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export type FormTab = "general" | "ssh" | "ssl" | "advanced";
+export type ToastType = "error" | "info";
 
 interface UIStoreState {
   searchText: string;
@@ -20,12 +21,19 @@ interface UIStoreState {
   toast: {
     visible: boolean;
     message: string;
+    type: ToastType;
   };
   confirmDialog: {
     visible: boolean;
     title: string;
     message: string;
     destructiveLabel: string;
+  };
+  inputDialog: {
+    visible: boolean;
+    title: string;
+    placeholder: string;
+    confirmLabel: string;
   };
 }
 
@@ -34,6 +42,13 @@ interface ConfirmDialogOptions {
   message: string;
   destructiveLabel: string;
   onConfirm: () => void;
+}
+
+interface InputDialogOptions {
+  title: string;
+  placeholder: string;
+  confirmLabel: string;
+  onConfirm: (value: string) => void;
 }
 
 interface UIStoreActions {
@@ -46,11 +61,14 @@ interface UIStoreActions {
   setFormTab(tab: FormTab): void;
   showContextMenu(x: number, y: number, connectionId?: string, groupId?: string): void;
   hideContextMenu(): void;
-  showToast(message: string): void;
+  showToast(message: string, type?: ToastType): void;
   dismissToast(): void;
   showConfirmDialog(opts: ConfirmDialogOptions): void;
   hideConfirmDialog(): void;
   executeConfirm(): void;
+  showInputDialog(opts: InputDialogOptions): void;
+  hideInputDialog(): void;
+  executeInput(value: string): void;
 }
 
 type UIStore = [UIStoreState, UIStoreActions];
@@ -59,6 +77,7 @@ const UIContext = createContext<UIStore>();
 
 export function UIProvider(props: { children: JSX.Element }) {
   let pendingConfirmCallback: (() => void) | null = null;
+  let pendingInputCallback: ((value: string) => void) | null = null;
   let toastTimerId: ReturnType<typeof setTimeout> | null = null;
 
   const [state, setState] = createStore<UIStoreState>({
@@ -78,12 +97,19 @@ export function UIProvider(props: { children: JSX.Element }) {
     toast: {
       visible: false,
       message: "",
+      type: "error" as ToastType,
     },
     confirmDialog: {
       visible: false,
       title: "",
       message: "",
       destructiveLabel: "Delete",
+    },
+    inputDialog: {
+      visible: false,
+      title: "",
+      placeholder: "",
+      confirmLabel: "OK",
     },
   });
 
@@ -141,9 +167,9 @@ export function UIProvider(props: { children: JSX.Element }) {
       setState("contextMenu", "visible", false);
     },
 
-    showToast(message) {
+    showToast(message, type = "error") {
       if (toastTimerId) clearTimeout(toastTimerId);
-      setState("toast", { visible: true, message });
+      setState("toast", { visible: true, message, type });
       toastTimerId = setTimeout(() => {
         setState("toast", "visible", false);
         toastTimerId = null;
@@ -177,6 +203,27 @@ export function UIProvider(props: { children: JSX.Element }) {
       pendingConfirmCallback?.();
       pendingConfirmCallback = null;
       setState("confirmDialog", "visible", false);
+    },
+
+    showInputDialog(opts) {
+      pendingInputCallback = opts.onConfirm;
+      setState("inputDialog", {
+        visible: true,
+        title: opts.title,
+        placeholder: opts.placeholder,
+        confirmLabel: opts.confirmLabel,
+      });
+    },
+
+    hideInputDialog() {
+      pendingInputCallback = null;
+      setState("inputDialog", "visible", false);
+    },
+
+    executeInput(value) {
+      pendingInputCallback?.(value);
+      pendingInputCallback = null;
+      setState("inputDialog", "visible", false);
     },
   };
 

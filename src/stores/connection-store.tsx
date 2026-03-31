@@ -1,6 +1,10 @@
 import { createContext, useContext, onMount, type JSX } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import type { DatabaseConnection } from "../models/connection";
+import {
+  createDefaultSSHConfig,
+  createDefaultSSLConfig,
+  type DatabaseConnection,
+} from "../models/connection";
 import type { ConnectionGroup } from "../models/group";
 import { PRESET_TAGS, type ConnectionTag } from "../models/tag";
 import * as storage from "../services/storage";
@@ -23,6 +27,7 @@ interface ConnectionStoreActions {
   addConnection(conn: DatabaseConnection, credentials?: Credentials): Promise<void>;
   updateConnection(conn: DatabaseConnection, credentials?: Credentials): Promise<void>;
   removeConnection(id: string): Promise<void>;
+  duplicateConnection(id: string): Promise<void>;
   addGroup(group: ConnectionGroup): Promise<void>;
   updateGroup(group: ConnectionGroup): Promise<void>;
   removeGroup(id: string): Promise<void>;
@@ -107,6 +112,19 @@ export function ConnectionProvider(props: { children: JSX.Element }) {
         ui.showToast(`Failed to delete connection: ${formatError(err)}`);
         throw err;
       }
+    },
+
+    async duplicateConnection(id) {
+      const original = state.connections.find((c) => c.id === id);
+      if (!original) return;
+      const copy: DatabaseConnection = {
+        ...original,
+        id: crypto.randomUUID(),
+        name: `${original.name} Copy`,
+        sshConfig: { ...createDefaultSSHConfig() },
+        sslConfig: { ...createDefaultSSLConfig() },
+      };
+      await actions.addConnection(copy);
     },
 
     async addGroup(group) {

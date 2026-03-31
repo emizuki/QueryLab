@@ -25,8 +25,9 @@ export function ConnectionRow(props: ConnectionRowProps) {
       }`}
       onClick={() => ui.selectConnection(props.connection.id)}
       onDblClick={() => ui.openEditForm(props.connection.id)}
-      onContextMenu={(e) => {
+      on:contextmenu={(e: MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         ui.selectConnection(props.connection.id);
         ui.showContextMenu(e.clientX, e.clientY, props.connection.id);
       }}

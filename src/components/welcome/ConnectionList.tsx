@@ -51,14 +51,18 @@ export function ConnectionList() {
         <button
           type="button"
           onClick={() => {
-            const name = prompt("Group name:");
-            if (name?.trim()) {
-              actions.addGroup({
-                id: crypto.randomUUID(),
-                name: name.trim(),
-                color: "gray",
-              });
-            }
+            ui.showInputDialog({
+              title: "New Group",
+              placeholder: "Group name",
+              confirmLabel: "Create",
+              onConfirm: (name) => {
+                actions.addGroup({
+                  id: crypto.randomUUID(),
+                  name,
+                  color: "gray",
+                });
+              },
+            });
           }}
           class="flex items-center justify-center w-7 h-7 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
           title="New group"

@@ -4,6 +4,7 @@ import { UIProvider, useUI } from "./stores/ui-store";
 import { WelcomeWindow } from "./components/welcome/WelcomeWindow";
 import { ConnectionForm } from "./components/connection-form/ConnectionForm";
 import { ConfirmDialog } from "./components/shared/ConfirmDialog";
+import { InputDialog } from "./components/shared/InputDialog";
 import { Toast } from "./components/shared/Toast";
 
 function AppContent() {
@@ -16,6 +17,7 @@ function AppContent() {
         <ConnectionForm />
       </Show>
       <ConfirmDialog />
+      <InputDialog />
       <Toast />
     </>
   );
