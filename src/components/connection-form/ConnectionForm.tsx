@@ -1,10 +1,12 @@
 import { createSignal, createEffect, onMount, onCleanup, Switch, Match } from "solid-js";
-import { createStore } from "solid-js/store";
-import { useConnections } from "../../stores/connection-store";
+import { createStore, produce } from "solid-js/store";
+import { useConnections, type Credentials } from "../../stores/connection-store";
 import { useUI, type FormTab } from "../../stores/ui-store";
 import {
   createDefaultConnection,
   type DatabaseConnection,
+  type SSHConfiguration,
+  type SSLConfiguration,
 } from "../../models/connection";
 import { SegmentedControl } from "../shared/SegmentedControl";
 import { GeneralTab } from "./GeneralTab";
@@ -13,6 +15,7 @@ import { SSLTLSTab } from "./SSLTLSTab";
 import { AdvancedTab } from "./AdvancedTab";
 import { FormFooter } from "./FormFooter";
 import * as storage from "../../services/storage";
+import { validateConnection, type FormErrors } from "../../validation/connection";
 
 const tabOptions: { value: FormTab; label: string }[] = [
   { value: "general", label: "General" },
@@ -31,6 +34,29 @@ export function ConnectionForm() {
     createDefaultConnection()
   );
   const [password, setPassword] = createSignal("");
+  const [errors, setErrors] = createSignal<FormErrors>({});
+
+  const clearError = (key: string) => {
+    if (errors()[key]) setErrors((prev) => { const { [key]: _, ...rest } = prev; return rest; });
+  };
+
+  const updateField = <K extends keyof DatabaseConnection>(key: K, value: DatabaseConnection[K]) => {
+    setConn(produce(s => Object.assign(s, { [key]: value })));
+    clearError(key as string);
+  };
+
+  const sshErrorKeys: Record<string, string> = {
+    host: "sshHost", port: "sshPort", username: "sshUsername", privateKeyPath: "sshPrivateKeyPath",
+  };
+
+  const updateSSH = <K extends keyof SSHConfiguration>(key: K, value: SSHConfiguration[K]) => {
+    setConn("sshConfig", produce(s => Object.assign(s, { [key]: value })));
+    clearError(sshErrorKeys[key as string] ?? key as string);
+  };
+
+  const updateSSL = <K extends keyof SSLConfiguration>(key: K, value: SSLConfiguration[K]) => {
+    setConn("sslConfig", produce(s => Object.assign(s, { [key]: value })));
+  };
 
   // Load connection data when editing
   createEffect(() => {
@@ -43,9 +69,15 @@ export function ConnectionForm() {
           sshConfig: { ...existing.sshConfig },
           sslConfig: { ...existing.sslConfig },
         });
-        // Load password from keychain
+        // Load credentials from keychain
         storage.loadPassword(editId).then((pw) => {
           if (pw) setPassword(pw);
+        });
+        storage.loadSshPassword(editId).then((pw) => {
+          if (pw) setConn("sshConfig", "password", pw);
+        });
+        storage.loadSshPassphrase(editId).then((pp) => {
+          if (pp) setConn("sshConfig", "passphrase", pp);
         });
       }
     } else {
@@ -55,10 +87,27 @@ export function ConnectionForm() {
   });
 
   const handleSave = async () => {
+    const validationErrors = validateConnection(conn);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      // Switch to the tab containing the first error
+      if (validationErrors.name || validationErrors.host || validationErrors.port || validationErrors.database || validationErrors.username) {
+        ui.setFormTab("general");
+      } else if (Object.keys(validationErrors).some((k) => k.startsWith("ssh"))) {
+        ui.setFormTab("ssh");
+      }
+      return;
+    }
+    setErrors({});
+    const credentials: Credentials = {
+      password: password(),
+      sshPassword: conn.sshConfig.password,
+      sshPassphrase: conn.sshConfig.passphrase,
+    };
     if (isEditing()) {
-      await actions.updateConnection({ ...conn }, password());
+      await actions.updateConnection({ ...conn }, credentials);
     } else {
-      await actions.addConnection({ ...conn }, password());
+      await actions.addConnection({ ...conn }, credentials);
     }
     ui.closeForm();
   };
@@ -115,24 +164,22 @@ export function ConnectionForm() {
               <GeneralTab
                 connection={conn}
                 password={password()}
-                onChange={(key, value) => setConn(key as any, value as any)}
+                errors={errors()}
+                onChange={updateField}
                 onPasswordChange={setPassword}
               />
             </Match>
             <Match when={uiState.activeFormTab === "ssh"}>
               <SSHTunnelTab
                 config={conn.sshConfig}
-                onChange={(key, value) =>
-                  setConn("sshConfig", key as any, value as any)
-                }
+                errors={errors()}
+                onChange={updateSSH}
               />
             </Match>
             <Match when={uiState.activeFormTab === "ssl"}>
               <SSLTLSTab
                 config={conn.sslConfig}
-                onChange={(key, value) =>
-                  setConn("sslConfig", key as any, value as any)
-                }
+                onChange={updateSSL}
               />
             </Match>
             <Match when={uiState.activeFormTab === "advanced"}>

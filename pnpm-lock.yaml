@@ -26,6 +26,9 @@ importers:
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2
+      valibot:
+        specifier: ^1.3.1
+        version: 1.3.1(typescript@5.6.3)
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2
@@ -902,6 +905,14 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  valibot@1.3.1:
+    resolution: {integrity: sha512-sfdRir/QFM0JaF22hqTroPc5xy4DimuGQVKFrzF1YfGwaS1nJot3Y8VqMdLO2Lg27fMzat2yD3pY5PbAYO39Gg==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   vite-plugin-solid@2.11.11:
     resolution: {integrity: sha512-YMZCXsLw9kyuvQFEdwLP27fuTQJLmjNoHy90AOJnbRuJ6DwShUxKFo38gdFrWn9v11hnGicKCZEaeI/TFs6JKw==}
     peerDependencies:
@@ -1650,6 +1661,10 @@ snapshots:
       browserslist: 4.28.1
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  valibot@1.3.1(typescript@5.6.3):
+    optionalDependencies:
+      typescript: 5.6.3
 
   vite-plugin-solid@2.11.11(solid-js@1.9.12)(vite@6.4.1(jiti@2.6.1)(lightningcss@1.32.0)):
     dependencies:

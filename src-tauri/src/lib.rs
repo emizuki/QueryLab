@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use tauri::Manager;
 
 mod models;
@@ -12,6 +13,7 @@ use storage::groups::{delete_group, load_groups, save_group};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(storage::StoreLock(Mutex::new(())))
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             load_connections,

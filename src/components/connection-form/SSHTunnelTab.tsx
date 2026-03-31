@@ -5,9 +5,11 @@ import { Select } from "../shared/Select";
 import { Toggle } from "../shared/Toggle";
 import type { SSHConfiguration } from "../../models/connection";
 import type { SSHAuthMethod } from "../../models/connection";
+import type { FormErrors } from "../../validation/connection";
 
 interface SSHTunnelTabProps {
   config: SSHConfiguration;
+  errors: FormErrors;
   onChange: <K extends keyof SSHConfiguration>(key: K, value: SSHConfiguration[K]) => void;
 }
 
@@ -32,6 +34,7 @@ export function SSHTunnelTab(props: SSHTunnelTabProps) {
           value={props.config.host}
           onInput={(v) => props.onChange("host", v)}
           placeholder="ssh.example.com"
+          error={props.errors.sshHost}
         />
         <div class="flex gap-3">
           <TextField
@@ -40,6 +43,7 @@ export function SSHTunnelTab(props: SSHTunnelTabProps) {
             onInput={(v) => props.onChange("port", parseInt(v) || 22)}
             type="number"
             class="w-24"
+            error={props.errors.sshPort}
           />
           <TextField
             label="Username"
@@ -47,6 +51,7 @@ export function SSHTunnelTab(props: SSHTunnelTabProps) {
             onInput={(v) => props.onChange("username", v)}
             placeholder="ssh user"
             class="flex-1"
+            error={props.errors.sshUsername}
           />
         </div>
 
@@ -72,6 +77,7 @@ export function SSHTunnelTab(props: SSHTunnelTabProps) {
             value={props.config.privateKeyPath}
             onInput={(v) => props.onChange("privateKeyPath", v)}
             placeholder="~/.ssh/id_rsa"
+            error={props.errors.sshPrivateKeyPath}
           />
           <SecureField
             label="Passphrase"

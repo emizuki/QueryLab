@@ -33,3 +33,23 @@ export async function savePassword(connectionId: string, password: string): Prom
 export async function loadPassword(connectionId: string): Promise<string | null> {
   return invoke("load_password", { connectionId });
 }
+
+export async function deletePassword(connectionId: string): Promise<void> {
+  return invoke("delete_password", { connectionId });
+}
+
+export async function saveSshPassword(connectionId: string, password: string): Promise<void> {
+  return invoke("save_ssh_password", { connectionId, password });
+}
+
+export async function loadSshPassword(connectionId: string): Promise<string | null> {
+  return invoke("load_ssh_password", { connectionId });
+}
+
+export async function saveSshPassphrase(connectionId: string, passphrase: string): Promise<void> {
+  return invoke("save_ssh_passphrase", { connectionId, passphrase });
+}
+
+export async function loadSshPassphrase(connectionId: string): Promise<string | null> {
+  return invoke("load_ssh_passphrase", { connectionId });
+}

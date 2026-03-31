@@ -1,4 +1,5 @@
 use crate::models::group::ConnectionGroup;
+use crate::storage::StoreLock;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
@@ -20,7 +21,12 @@ pub fn load_groups(app: tauri::AppHandle) -> Result<Vec<ConnectionGroup>, String
 }
 
 #[tauri::command]
-pub fn save_group(app: tauri::AppHandle, group: ConnectionGroup) -> Result<(), String> {
+pub fn save_group(
+    app: tauri::AppHandle,
+    group: ConnectionGroup,
+    store_lock: tauri::State<'_, StoreLock>,
+) -> Result<(), String> {
+    let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
     let mut groups = load_groups(app.clone()).unwrap_or_default();
     if let Some(pos) = groups.iter().position(|g| g.id == group.id) {
         groups[pos] = group;
@@ -33,7 +39,12 @@ pub fn save_group(app: tauri::AppHandle, group: ConnectionGroup) -> Result<(), S
 }
 
 #[tauri::command]
-pub fn delete_group(app: tauri::AppHandle, id: String) -> Result<(), String> {
+pub fn delete_group(
+    app: tauri::AppHandle,
+    id: String,
+    store_lock: tauri::State<'_, StoreLock>,
+) -> Result<(), String> {
+    let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
     let mut groups = load_groups(app.clone()).unwrap_or_default();
     groups.retain(|g| g.id != id);
     let path = groups_path(&app);

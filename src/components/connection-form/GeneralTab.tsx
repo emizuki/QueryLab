@@ -10,10 +10,12 @@ import type { DatabaseType } from "../../models/database-type";
 import { DATABASE_DEFAULTS } from "../../models/database-type";
 import { PRESET_TAGS } from "../../models/tag";
 import { useConnections } from "../../stores/connection-store";
+import type { FormErrors } from "../../validation/connection";
 
 interface GeneralTabProps {
   connection: DatabaseConnection;
   password: string;
+  errors: FormErrors;
   onChange: <K extends keyof DatabaseConnection>(key: K, value: DatabaseConnection[K]) => void;
   onPasswordChange: (password: string) => void;
 }
@@ -55,6 +57,7 @@ export function GeneralTab(props: GeneralTabProps) {
         value={props.connection.name}
         onInput={(v) => props.onChange("name", v)}
         placeholder="Connection name"
+        error={props.errors.name}
       />
 
       <Show when={props.connection.type === "sqlite"}>
@@ -68,6 +71,7 @@ export function GeneralTab(props: GeneralTabProps) {
             value={props.connection.database}
             onInput={(v) => props.onChange("database", v)}
             placeholder="/path/to/database.db"
+            error={props.errors.database}
           />
         </div>
       </Show>
@@ -98,6 +102,7 @@ export function GeneralTab(props: GeneralTabProps) {
             value={props.connection.host}
             onInput={(v) => props.onChange("host", v)}
             placeholder="localhost"
+            error={props.errors.host}
           />
           <div class="flex gap-3">
             <TextField
@@ -106,6 +111,7 @@ export function GeneralTab(props: GeneralTabProps) {
               onInput={(v) => props.onChange("port", parseInt(v) || 0)}
               type="number"
               class="w-24"
+              error={props.errors.port}
             />
             <TextField
               label="Database"
@@ -127,6 +133,7 @@ export function GeneralTab(props: GeneralTabProps) {
             value={props.connection.username}
             onInput={(v) => props.onChange("username", v)}
             placeholder="username"
+            error={props.errors.username}
           />
           {props.connection.type === "postgresql" && (
             <Toggle

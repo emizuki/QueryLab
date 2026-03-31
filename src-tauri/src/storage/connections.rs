@@ -1,4 +1,5 @@
 use crate::models::connection::DatabaseConnection;
+use crate::storage::StoreLock;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
@@ -20,7 +21,12 @@ pub fn load_connections(app: tauri::AppHandle) -> Result<Vec<DatabaseConnection>
 }
 
 #[tauri::command]
-pub fn save_connection(app: tauri::AppHandle, connection: DatabaseConnection) -> Result<(), String> {
+pub fn save_connection(
+    app: tauri::AppHandle,
+    connection: DatabaseConnection,
+    store_lock: tauri::State<'_, StoreLock>,
+) -> Result<(), String> {
+    let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
     let mut connections = load_connections(app.clone()).unwrap_or_default();
     if let Some(pos) = connections.iter().position(|c| c.id == connection.id) {
         connections[pos] = connection;
@@ -33,7 +39,12 @@ pub fn save_connection(app: tauri::AppHandle, connection: DatabaseConnection) ->
 }
 
 #[tauri::command]
-pub fn delete_connection(app: tauri::AppHandle, id: String) -> Result<(), String> {
+pub fn delete_connection(
+    app: tauri::AppHandle,
+    id: String,
+    store_lock: tauri::State<'_, StoreLock>,
+) -> Result<(), String> {
+    let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
     let mut connections = load_connections(app.clone()).unwrap_or_default();
     connections.retain(|c| c.id != id);
     let path = connections_path(&app);

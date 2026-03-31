@@ -7,6 +7,7 @@ interface SecureFieldProps {
   onInput: (value: string) => void;
   placeholder?: string;
   class?: string;
+  error?: string;
 }
 
 export function SecureField(props: SecureFieldProps) {
@@ -23,7 +24,9 @@ export function SecureField(props: SecureFieldProps) {
           value={props.value}
           onInput={(e) => props.onInput(e.currentTarget.value)}
           placeholder={props.placeholder}
-          class="h-7 w-full rounded-md border border-border bg-surface-secondary px-2.5 pr-8 text-[13px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors focus:border-accent"
+          class={`h-7 w-full rounded-md border bg-surface-secondary px-2.5 pr-8 text-[13px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors ${
+            props.error ? "border-tag-red focus:border-tag-red" : "border-border focus:border-accent"
+          }`}
         />
         <button
           type="button"
@@ -34,6 +37,9 @@ export function SecureField(props: SecureFieldProps) {
           {visible() ? <Eye size={14} /> : <EyeOff size={14} />}
         </button>
       </div>
+      {props.error && (
+        <p class="text-[11px] text-tag-red">{props.error}</p>
+      )}
     </div>
   );
 }

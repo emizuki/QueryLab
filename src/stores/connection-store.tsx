@@ -12,9 +12,15 @@ interface ConnectionStoreState {
   loaded: boolean;
 }
 
+export interface Credentials {
+  password?: string;
+  sshPassword?: string;
+  sshPassphrase?: string;
+}
+
 interface ConnectionStoreActions {
-  addConnection(conn: DatabaseConnection, password?: string): Promise<void>;
-  updateConnection(conn: DatabaseConnection, password?: string): Promise<void>;
+  addConnection(conn: DatabaseConnection, credentials?: Credentials): Promise<void>;
+  updateConnection(conn: DatabaseConnection, credentials?: Credentials): Promise<void>;
   removeConnection(id: string): Promise<void>;
   addGroup(group: ConnectionGroup): Promise<void>;
   updateGroup(group: ConnectionGroup): Promise<void>;
@@ -51,15 +57,19 @@ export function ConnectionProvider(props: { children: JSX.Element }) {
   });
 
   const actions: ConnectionStoreActions = {
-    async addConnection(conn, password) {
+    async addConnection(conn, credentials) {
       await storage.saveConnection(conn);
-      if (password) await storage.savePassword(conn.id, password);
+      if (credentials?.password) await storage.savePassword(conn.id, credentials.password);
+      if (credentials?.sshPassword) await storage.saveSshPassword(conn.id, credentials.sshPassword);
+      if (credentials?.sshPassphrase) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase);
       setState("connections", (prev) => [...prev, conn]);
     },
 
-    async updateConnection(conn, password) {
+    async updateConnection(conn, credentials) {
       await storage.saveConnection(conn);
-      if (password !== undefined) await storage.savePassword(conn.id, password || "");
+      if (credentials?.password !== undefined) await storage.savePassword(conn.id, credentials.password || "");
+      if (credentials?.sshPassword !== undefined) await storage.saveSshPassword(conn.id, credentials.sshPassword || "");
+      if (credentials?.sshPassphrase !== undefined) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase || "");
       setState(
         "connections",
         (c) => c.id === conn.id,
@@ -69,6 +79,7 @@ export function ConnectionProvider(props: { children: JSX.Element }) {
 
     async removeConnection(id) {
       await storage.deleteConnection(id);
+      await storage.deletePassword(id);
       setState(
         produce((s) => {
           s.connections = s.connections.filter((c) => c.id !== id);
