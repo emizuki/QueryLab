@@ -3,6 +3,8 @@ import { ConnectionProvider } from "./stores/connection-store";
 import { UIProvider, useUI } from "./stores/ui-store";
 import { WelcomeWindow } from "./components/welcome/WelcomeWindow";
 import { ConnectionForm } from "./components/connection-form/ConnectionForm";
+import { ConfirmDialog } from "./components/shared/ConfirmDialog";
+import { Toast } from "./components/shared/Toast";
 
 function AppContent() {
   const [uiState] = useUI();
@@ -13,17 +15,19 @@ function AppContent() {
       <Show when={uiState.showConnectionForm}>
         <ConnectionForm />
       </Show>
+      <ConfirmDialog />
+      <Toast />
     </>
   );
 }
 
 function App() {
   return (
-    <ConnectionProvider>
-      <UIProvider>
+    <UIProvider>
+      <ConnectionProvider>
         <AppContent />
-      </UIProvider>
-    </ConnectionProvider>
+      </ConnectionProvider>
+    </UIProvider>
   );
 }
 

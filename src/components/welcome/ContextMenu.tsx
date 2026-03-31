@@ -4,7 +4,7 @@ import { useConnections } from "../../stores/connection-store";
 
 export function ContextMenu() {
   const [uiState, ui] = useUI();
-  const [, actions] = useConnections();
+  const [connState, actions] = useConnections();
 
   const handleClickOutside = () => {
     if (uiState.contextMenu.visible) ui.hideContextMenu();
@@ -48,10 +48,23 @@ export function ContextMenu() {
           <MenuItem
             label="Delete"
             destructive
-            onClick={async () => {
-              await actions.removeConnection(uiState.contextMenu.connectionId!);
-              ui.selectConnection(null);
+            onClick={() => {
+              const connId = uiState.contextMenu.connectionId!;
+              const connName = connState.connections.find((c) => c.id === connId)?.name || "this connection";
               ui.hideContextMenu();
+              ui.showConfirmDialog({
+                title: `Delete "${connName}"?`,
+                message: "This connection and its saved credentials will be permanently removed.",
+                destructiveLabel: "Delete",
+                onConfirm: async () => {
+                  try {
+                    await actions.removeConnection(connId);
+                    ui.selectConnection(null);
+                  } catch {
+                    // Toast already shown by store action
+                  }
+                },
+              });
             }}
           />
         </Show>
@@ -68,9 +81,22 @@ export function ContextMenu() {
           <MenuItem
             label="Delete Group"
             destructive
-            onClick={async () => {
-              await actions.removeGroup(uiState.contextMenu.groupId!);
+            onClick={() => {
+              const groupId = uiState.contextMenu.groupId!;
+              const groupName = connState.groups.find((g) => g.id === groupId)?.name || "this group";
               ui.hideContextMenu();
+              ui.showConfirmDialog({
+                title: `Delete "${groupName}"?`,
+                message: "Connections in this group will be ungrouped but not deleted.",
+                destructiveLabel: "Delete Group",
+                onConfirm: async () => {
+                  try {
+                    await actions.removeGroup(groupId);
+                  } catch {
+                    // Toast already shown by store action
+                  }
+                },
+              });
             }}
           />
         </Show>

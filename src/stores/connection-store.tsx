@@ -4,6 +4,7 @@ import type { DatabaseConnection } from "../models/connection";
 import type { ConnectionGroup } from "../models/group";
 import { PRESET_TAGS, type ConnectionTag } from "../models/tag";
 import * as storage from "../services/storage";
+import { useUI } from "./ui-store";
 
 interface ConnectionStoreState {
   connections: DatabaseConnection[];
@@ -35,7 +36,13 @@ type ConnectionStore = [ConnectionStoreState, ConnectionStoreActions];
 
 const ConnectionContext = createContext<ConnectionStore>();
 
+function formatError(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 export function ConnectionProvider(props: { children: JSX.Element }) {
+  const [, ui] = useUI();
+
   const [state, setState] = createStore<ConnectionStoreState>({
     connections: [],
     groups: [],
@@ -58,60 +65,90 @@ export function ConnectionProvider(props: { children: JSX.Element }) {
 
   const actions: ConnectionStoreActions = {
     async addConnection(conn, credentials) {
-      await storage.saveConnection(conn);
-      if (credentials?.password) await storage.savePassword(conn.id, credentials.password);
-      if (credentials?.sshPassword) await storage.saveSshPassword(conn.id, credentials.sshPassword);
-      if (credentials?.sshPassphrase) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase);
-      setState("connections", (prev) => [...prev, conn]);
+      try {
+        await storage.saveConnection(conn);
+        if (credentials?.password) await storage.savePassword(conn.id, credentials.password);
+        if (credentials?.sshPassword) await storage.saveSshPassword(conn.id, credentials.sshPassword);
+        if (credentials?.sshPassphrase) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase);
+        setState("connections", (prev) => [...prev, conn]);
+      } catch (err) {
+        ui.showToast(`Failed to save connection: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     async updateConnection(conn, credentials) {
-      await storage.saveConnection(conn);
-      if (credentials?.password !== undefined) await storage.savePassword(conn.id, credentials.password || "");
-      if (credentials?.sshPassword !== undefined) await storage.saveSshPassword(conn.id, credentials.sshPassword || "");
-      if (credentials?.sshPassphrase !== undefined) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase || "");
-      setState(
-        "connections",
-        (c) => c.id === conn.id,
-        conn
-      );
+      try {
+        await storage.saveConnection(conn);
+        if (credentials?.password !== undefined) await storage.savePassword(conn.id, credentials.password || "");
+        if (credentials?.sshPassword !== undefined) await storage.saveSshPassword(conn.id, credentials.sshPassword || "");
+        if (credentials?.sshPassphrase !== undefined) await storage.saveSshPassphrase(conn.id, credentials.sshPassphrase || "");
+        setState(
+          "connections",
+          (c) => c.id === conn.id,
+          conn
+        );
+      } catch (err) {
+        ui.showToast(`Failed to update connection: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     async removeConnection(id) {
-      await storage.deleteConnection(id);
-      await storage.deletePassword(id);
-      setState(
-        produce((s) => {
-          s.connections = s.connections.filter((c) => c.id !== id);
-        })
-      );
+      try {
+        await storage.deleteConnection(id);
+        await storage.deletePassword(id);
+        setState(
+          produce((s) => {
+            s.connections = s.connections.filter((c) => c.id !== id);
+          })
+        );
+      } catch (err) {
+        ui.showToast(`Failed to delete connection: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     async addGroup(group) {
-      await storage.saveGroup(group);
-      setState("groups", (prev) => [...prev, group]);
+      try {
+        await storage.saveGroup(group);
+        setState("groups", (prev) => [...prev, group]);
+      } catch (err) {
+        ui.showToast(`Failed to save group: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     async updateGroup(group) {
-      await storage.saveGroup(group);
-      setState(
-        "groups",
-        (g) => g.id === group.id,
-        group
-      );
+      try {
+        await storage.saveGroup(group);
+        setState(
+          "groups",
+          (g) => g.id === group.id,
+          group
+        );
+      } catch (err) {
+        ui.showToast(`Failed to update group: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     async removeGroup(id) {
-      await storage.deleteGroup(id);
-      setState(
-        produce((s) => {
-          s.groups = s.groups.filter((g) => g.id !== id);
-          // Ungroup connections that were in this group
-          s.connections.forEach((c) => {
-            if (c.groupId === id) c.groupId = null;
-          });
-        })
-      );
+      try {
+        await storage.deleteGroup(id);
+        setState(
+          produce((s) => {
+            s.groups = s.groups.filter((g) => g.id !== id);
+            // Ungroup connections that were in this group
+            s.connections.forEach((c) => {
+              if (c.groupId === id) c.groupId = null;
+            });
+          })
+        );
+      } catch (err) {
+        ui.showToast(`Failed to delete group: ${formatError(err)}`);
+        throw err;
+      }
     },
 
     getTag(id) {

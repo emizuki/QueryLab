@@ -17,6 +17,23 @@ interface UIStoreState {
     connectionId: string | null;
     groupId: string | null;
   };
+  toast: {
+    visible: boolean;
+    message: string;
+  };
+  confirmDialog: {
+    visible: boolean;
+    title: string;
+    message: string;
+    destructiveLabel: string;
+  };
+}
+
+interface ConfirmDialogOptions {
+  title: string;
+  message: string;
+  destructiveLabel: string;
+  onConfirm: () => void;
 }
 
 interface UIStoreActions {
@@ -29,6 +46,11 @@ interface UIStoreActions {
   setFormTab(tab: FormTab): void;
   showContextMenu(x: number, y: number, connectionId?: string, groupId?: string): void;
   hideContextMenu(): void;
+  showToast(message: string): void;
+  dismissToast(): void;
+  showConfirmDialog(opts: ConfirmDialogOptions): void;
+  hideConfirmDialog(): void;
+  executeConfirm(): void;
 }
 
 type UIStore = [UIStoreState, UIStoreActions];
@@ -36,6 +58,9 @@ type UIStore = [UIStoreState, UIStoreActions];
 const UIContext = createContext<UIStore>();
 
 export function UIProvider(props: { children: JSX.Element }) {
+  let pendingConfirmCallback: (() => void) | null = null;
+  let toastTimerId: ReturnType<typeof setTimeout> | null = null;
+
   const [state, setState] = createStore<UIStoreState>({
     searchText: "",
     selectedConnectionId: null,
@@ -49,6 +74,16 @@ export function UIProvider(props: { children: JSX.Element }) {
       y: 0,
       connectionId: null,
       groupId: null,
+    },
+    toast: {
+      visible: false,
+      message: "",
+    },
+    confirmDialog: {
+      visible: false,
+      title: "",
+      message: "",
+      destructiveLabel: "Delete",
     },
   });
 
@@ -104,6 +139,44 @@ export function UIProvider(props: { children: JSX.Element }) {
 
     hideContextMenu() {
       setState("contextMenu", "visible", false);
+    },
+
+    showToast(message) {
+      if (toastTimerId) clearTimeout(toastTimerId);
+      setState("toast", { visible: true, message });
+      toastTimerId = setTimeout(() => {
+        setState("toast", "visible", false);
+        toastTimerId = null;
+      }, 3500);
+    },
+
+    dismissToast() {
+      if (toastTimerId) {
+        clearTimeout(toastTimerId);
+        toastTimerId = null;
+      }
+      setState("toast", "visible", false);
+    },
+
+    showConfirmDialog(opts) {
+      pendingConfirmCallback = opts.onConfirm;
+      setState("confirmDialog", {
+        visible: true,
+        title: opts.title,
+        message: opts.message,
+        destructiveLabel: opts.destructiveLabel,
+      });
+    },
+
+    hideConfirmDialog() {
+      pendingConfirmCallback = null;
+      setState("confirmDialog", "visible", false);
+    },
+
+    executeConfirm() {
+      pendingConfirmCallback?.();
+      pendingConfirmCallback = null;
+      setState("confirmDialog", "visible", false);
     },
   };
 

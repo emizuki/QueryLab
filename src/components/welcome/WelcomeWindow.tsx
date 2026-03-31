@@ -7,7 +7,7 @@ import { useConnections } from "../../stores/connection-store";
 
 export function WelcomeWindow() {
   const [uiState, ui] = useUI();
-  const [store] = useConnections();
+  const [store, actions] = useConnections();
 
   const handleKeyDown = (e: KeyboardEvent) => {
     // Cmd+N: new connection
@@ -41,7 +41,21 @@ export function WelcomeWindow() {
     // Backspace/Delete: delete selected
     if ((e.key === "Backspace" || e.key === "Delete") && e.metaKey && uiState.selectedConnectionId) {
       e.preventDefault();
-      // TODO: confirm before delete
+      const connId = uiState.selectedConnectionId;
+      const connName = store.connections.find((c) => c.id === connId)?.name || "this connection";
+      ui.showConfirmDialog({
+        title: `Delete "${connName}"?`,
+        message: "This connection and its saved credentials will be permanently removed.",
+        destructiveLabel: "Delete",
+        onConfirm: async () => {
+          try {
+            await actions.removeConnection(connId);
+            ui.selectConnection(null);
+          } catch {
+            // Toast already shown by store action
+          }
+        },
+      });
     }
   };
 

@@ -104,20 +104,36 @@ export function ConnectionForm() {
       sshPassword: conn.sshConfig.password,
       sshPassphrase: conn.sshConfig.passphrase,
     };
-    if (isEditing()) {
-      await actions.updateConnection({ ...conn }, credentials);
-    } else {
-      await actions.addConnection({ ...conn }, credentials);
+    try {
+      if (isEditing()) {
+        await actions.updateConnection({ ...conn }, credentials);
+      } else {
+        await actions.addConnection({ ...conn }, credentials);
+      }
+      ui.closeForm();
+    } catch {
+      // Toast already shown by store action — keep form open
     }
-    ui.closeForm();
   };
 
-  const handleDelete = async () => {
-    if (uiState.editingConnectionId) {
-      await actions.removeConnection(uiState.editingConnectionId);
-      ui.selectConnection(null);
-    }
-    ui.closeForm();
+  const handleDelete = () => {
+    if (!uiState.editingConnectionId) return;
+    const connId = uiState.editingConnectionId;
+    const connName = conn.name || "this connection";
+    ui.showConfirmDialog({
+      title: `Delete "${connName}"?`,
+      message: "This connection and its saved credentials will be permanently removed.",
+      destructiveLabel: "Delete",
+      onConfirm: async () => {
+        try {
+          await actions.removeConnection(connId);
+          ui.selectConnection(null);
+          ui.closeForm();
+        } catch {
+          // Toast already shown by store action
+        }
+      },
+    });
   };
 
   const handleTestConnection = () => {
